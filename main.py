@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise, HTTPNotFoundError
-from tortoise import Tortoise
 
 from models import *
 
@@ -18,7 +17,6 @@ async def create_word(word: WordsInPydantic):
     word_obj = await Words.create(**word.dict(exclude_unset=True))
     return await WordsPydantic.from_tortoise_orm(word_obj)
 
-Tortoise.init_models(["models"], "models")
 register_tortoise(
     app,
     db_url="sqlite://db.sqlite3",
