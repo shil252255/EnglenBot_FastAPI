@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from requests import request
 from dotenv import load_dotenv
@@ -7,6 +8,7 @@ load_dotenv()
 
 SUB_INFO_URL = "https://api.opensubtitles.com/api/v1/subtitles"
 DL_SUB_URL = "https://api.opensubtitles.com/api/v1/download"
+SUB_DIR = Path('SubsParser/Subs')
 
 HEADERS = {
     "Content-Type": "application/json",
@@ -30,6 +32,8 @@ def request_dnl_link(sub_file_info: dict) -> dict:
 
 def download_sub(link, file):
     response = request('GET', link)
+    response.raise_for_status()
+    SUB_DIR.mkdir(parents=True, exist_ok=True)
     with open(file, 'wb') as f:
         f.write(response.content)
     return 1
@@ -39,11 +43,11 @@ def download_sub(link, file):
 def download(params: dict) -> dict:
     sub_file_name = f'{params["imdb_id"]}'
     if params.get("season_number"):
-        sub_file_name += f'_S{params["season_number"]:02.0f}E{params["episode_number"]:02.0f}'
+        sub_file_name += f'_S{params["season_number"]:02.0f}E{params["episode_number"]:02.0f}.srt'
     most_popular_sub_file_info = request_first_sub_file_info(params)
     if most_popular_sub_file_info:
         dnl_link = request_dnl_link(most_popular_sub_file_info)
-        return download_sub(dnl_link, f'SubsParser/{sub_file_name}.srt')
+        return download_sub(dnl_link, SUB_DIR/sub_file_name)
 
 
 def download_sub_for_serial(title_imdb_id):
@@ -68,5 +72,3 @@ def download_sub_for_serial(title_imdb_id):
 
 if __name__ == '__main__':
     download_sub_for_serial(title_imdb_id='tt1190634')  # Просто пример (сериал "пацаны")
-
-    # TODO нужно сделать параметром адрес файла
