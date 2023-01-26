@@ -14,6 +14,10 @@ HEADERS = {
     "Content-Type": "application/json",
     "Api-Key": os.environ['OPENSUBTITLES_TOKEN']
 }
+SUB_SEARCH_PARAMS = {
+        'languages': 'en',
+        'order_by': 'download_count',
+    }
 
 
 def request_first_sub_file_info(sub_params: dict) -> dict | None:
@@ -25,9 +29,9 @@ def request_first_sub_file_info(sub_params: dict) -> dict | None:
 
 
 def request_dnl_link(sub_file_info: dict) -> dict:
-    response = request(method="POST", url=DL_SUB_URL, headers=HEADERS, params=sub_file_info).json()
-    # TODO вот тут бы проверка на ошибки в ответе
-    return response['link']
+    response = request(method="POST", url=DL_SUB_URL, headers=HEADERS, params=sub_file_info)
+    response.raise_for_status()
+    return response.json()['link']
 
 
 def download_sub(link, file):
@@ -47,16 +51,12 @@ def download(params: dict) -> dict:
     most_popular_sub_file_info = request_first_sub_file_info(params)
     if most_popular_sub_file_info:
         dnl_link = request_dnl_link(most_popular_sub_file_info)
-        return download_sub(dnl_link, SUB_DIR/sub_file_name)
+        return download_sub(dnl_link, SUB_DIR / sub_file_name)
 
 
 def download_sub_for_serial(title_imdb_id):
-    params = {
-        'imdb_id': title_imdb_id,
-        'languages': 'en',
-        'order_by': 'download_count',
-    }
-
+    params = SUB_SEARCH_PARAMS.copy()
+    params['imdb_id'] = title_imdb_id
     if not download(params):
         params['season_number'] = 1
         params['episode_number'] = 1
@@ -72,3 +72,4 @@ def download_sub_for_serial(title_imdb_id):
 
 if __name__ == '__main__':
     download_sub_for_serial(title_imdb_id='tt1190634')  # Просто пример (сериал "пацаны")
+    # TODO надо бы тут использовать сессии а не вот это вот все каждый раз
