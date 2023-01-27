@@ -1,7 +1,15 @@
 venv
+.idea
 .env
+*.env
 db.*
+*.db
 migrations
 *.html
 *.json
 Parser/files/*
+Parser/SubsParser/Subs/*
+*.tsv
+*.srt
+*.vtt
+*.json3
